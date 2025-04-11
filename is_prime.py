@@ -49,4 +49,3 @@ def user_interaction():
 # Run the program
 if __name__ == "__main__":
     user_interaction()
-
