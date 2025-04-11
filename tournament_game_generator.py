@@ -48,7 +48,7 @@ def get_team_info():
         
 def get_game_info(teams_info):
     n_teams = len(teams_info)
-    
+
     # Check if each team at least pays each other once
     while True:
         n_games = input("Enter the number of games played by each team: ")
@@ -69,17 +69,85 @@ def get_game_info(teams_info):
     return n_games
 
 
-def determine_matchups():
+def get_regular_season_performance(teams_info, n_games):
     # Teams with the most regular season wins play the teams with thte least regular season wins.
     # If teams are tied in wins, the program can determine the matchup.
     # The team with less wins should be the home team.
     # If there is a tie in wins, the program can determine the home team.
-    pass
+    assert len(teams_info) > 0
+    for team in teams_info.keys():
+        while True:
+            wins = input(f'Enter the number of wins Team {team} had: ')
+            # Check if input is an integer
+            while not (wins.isdigit() or (wins.startswith('-') and wins[1:].isdigit())):
+                print('Invalid input, try again. Enter an integer.')
+                wins = input(f'Enter the number of wins Team {team} had: ')
+            
+            wins = int(wins)
+            # Check if wins in [0, n_games]
+            if wins > n_games:
+                print(f'The maximum number of wins is {n_games}, try again.')
+            elif wins < 0:
+                print('The minimum number of wins is 0, try again.')
+            else:
+                break
+        
+        teams_info[team] = wins
+    return teams_info
 
-def first_round_games():
-    pass
+def determine_matchups(teams_info):
+    leaderboard = []
+    for wins in teams_info.values():
+        leaderboard.append(wins)
+    
+    # Bubble sort
+    for i in range(len(leaderboard) - 1):
+        already_sorted = True
+        for j in range(len(leaderboard) - 1 - i):
+            if leaderboard[j] < leaderboard[j+1]:
+                leaderboard[j], leaderboard[j+1] = leaderboard[j+1], leaderboard[j]
+                already_sorted = False
+        if already_sorted:
+            break
+    # print(f'leaderboard: {leaderboard}')
+    return leaderboard
 
+def generate_first_round(teams_info, leaderboard):
+    first_round = []
+    n_first_round_games = int(len(teams_info) / 2)
+
+    # Inverted_teams_info to index by wins and get team name {win_count: [team1, team2, ..., teamN]}
+    inverted_teams_info = {}
+    for team_name, win_count in teams_info.items():
+        teams = []
+        if win_count in inverted_teams_info:
+            inverted_teams_info[win_count].append(team_name)
+        else:
+            teams.append(team_name)
+            inverted_teams_info[win_count] = teams  
+
+    # inverted_teams_info = {value: key for key, value in teams_info.items()} # to index by wins and get team_name
+    # print(f'inverted teams info: {inverted_teams_info}')
+    for i in range(n_first_round_games):
+        match_up = None
+        stronger_team = inverted_teams_info[leaderboard[i]].pop()
+        weaker_team = inverted_teams_info[leaderboard[-(i+1)]].pop()
+
+        match_up = [stronger_team, weaker_team]
+        first_round.append(match_up)
+    
+    # print(f'first round matches: {first_round}')
+    print('Generating the games to be played in the first round of the tournament...')
+    for match_up in first_round:
+        stronger_team = match_up[0]
+        weaker_team = match_up[1]
+        print(f'Home: {weaker_team} VS Away: {stronger_team}')
 
 if __name__ == '__main__':
     teams_info = get_team_info()
     n_games = get_game_info(teams_info)
+    teams_info = get_regular_season_performance(teams_info, n_games)
+    leaderboard = determine_matchups(teams_info)
+    generate_first_round(teams_info, leaderboard)
+    
+    
